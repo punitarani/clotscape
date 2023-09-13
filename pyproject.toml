@@ -8,6 +8,7 @@ packages = [{include = "segment_tumors"}]
 
 [tool.poetry.dependencies]
 python = "^3.10"
+jupyterlab = "^4.0.5"
 matplotlib = "^3.7.3"
 onnx = "^1.14.1"
 onnxruntime = "^1.15.1"
