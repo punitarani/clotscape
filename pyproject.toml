@@ -7,7 +7,7 @@ readme = "README.md"
 packages = [{include = "segment_tumors"}]
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = ">3.11 <3.12"
 jupyterlab = "^4.0.5"
 matplotlib = "^3.7.3"
 onnx = "^1.14.1"
