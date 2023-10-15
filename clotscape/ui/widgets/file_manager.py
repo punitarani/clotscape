@@ -1,10 +1,9 @@
 """clotscape/ui/widgets/file_manager.py"""
 
-import json
-import uuid
+import re
 from pathlib import Path
 
-from PySide6.QtCore import QSize
+from PySide6.QtCore import QSize, Signal
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import (
     QVBoxLayout,
@@ -12,117 +11,145 @@ from PySide6.QtWidgets import (
     QListWidget,
     QWidget,
     QHBoxLayout,
+    QMessageBox,
+    QInputDialog,
     QFileDialog,
 )
+
+from clotscape import Project
 
 
 class FileManager(QWidget):
     """App File Manager widget"""
 
-    def __init__(self, folder: Path = None):
+    project_changed = Signal(Project)
+
+    def __init__(self, project: Project = None):
         """
         FileManager constructor
 
         Args:
-            folder (Path, optional): The folder to use for the file manager.
-                Defaults to None, which will use the user's home directory.
+            project (Project, optional): Project to load. Defaults to None.
         """
         super().__init__()
 
-        self.folder: Path = folder
-        if self.folder is None:
-            self.folder = Path.home().joinpath("clotscape")
+        self.project: Project = project
 
-        self.selected_file_path = None  # Class variable to store selected file path
+        self.layout = QVBoxLayout()
 
-        layout = QVBoxLayout()
-
-        # Create top button layout
-        topButtonLayout = QHBoxLayout()
+        self.topButtonLayout = QHBoxLayout()
 
         # Open Project Button
-        openProjectButton = QPushButton(QIcon.fromTheme("folder-open"), "Open Project")
-        openProjectButton.setIconSize(QSize(24, 24))
-        openProjectButton.clicked.connect(self.open_project)
+        self.openProjectButton = QPushButton(
+            QIcon.fromTheme("folder-open"), "Open Project"
+        )
+        self.openProjectButton.setIconSize(QSize(24, 24))
+        self.openProjectButton.clicked.connect(self.open_project)
 
         # Create Project Button
-        createProjectButton = QPushButton(
+        self.createProjectButton = QPushButton(
             QIcon.fromTheme("document-new"), "Create Project"
         )
-        createProjectButton.setIconSize(QSize(24, 24))
-        createProjectButton.clicked.connect(self.create_project)
+        self.createProjectButton.setIconSize(QSize(24, 24))
+        self.createProjectButton.clicked.connect(self.create_project)
 
-        # Add open and save buttons to the top button layout
-        topButtonLayout.addWidget(openProjectButton)
-        topButtonLayout.addWidget(createProjectButton)
+        # Close Project Button
+        self.closeProjectButton = QPushButton(
+            QIcon.fromTheme("window-close"), "Close Project"
+        )
+        self.closeProjectButton.setIconSize(QSize(24, 24))
+        self.closeProjectButton.clicked.connect(self.close_project)
 
-        # Add the top button layout to the main layout
-        layout.addLayout(topButtonLayout)
+        self.topButtonLayout.addWidget(self.openProjectButton)
+        self.topButtonLayout.addWidget(self.createProjectButton)
+        self.topButtonLayout.addWidget(self.closeProjectButton)
+
+        self.layout.addLayout(self.topButtonLayout)
 
         # Upload Image Button
-        uploadButton = QPushButton(QIcon.fromTheme("document-open"), "Upload Image")
-        uploadButton.setIconSize(QSize(24, 24))
+        self.uploadButton = QPushButton(
+            QIcon.fromTheme("document-open"), "Upload Image"
+        )
+        self.uploadButton.setIconSize(QSize(24, 24))
+        # TODO: Connect this button to the appropriate function
+        # self.uploadButton.clicked.connect(self.upload_image)
 
-        # File List
         self.fileList = QListWidget()
 
-        # Add upload button and file list to the main layout
-        layout.addWidget(uploadButton)
-        layout.addWidget(self.fileList)
+        self.layout.addWidget(self.uploadButton)
+        self.layout.addWidget(self.fileList)
 
-        self.setLayout(layout)
+        self.setLayout(self.layout)
 
-    def create_project(self):
-        """Create a project to a .clot.scape file based on the folder the user selects."""
+        self.update_display()
 
-        # Open a directory picker dialog
-        selected_folder = QFileDialog.getExistingDirectory(
-            self, "Select Folder to Save Project"
-        )
-        if not selected_folder:
-            return
-
-        # Generate unique ID
-        project_id = str(uuid.uuid4())
-
-        # Get folder name for the project name and filename
-        folder_path = Path(selected_folder)
-        project_name = folder_path.name
-        file_path = folder_path.joinpath(f"{project_name}.clot.scape")
-
-        # Construct the data in the specified format
-        data = {"id": project_id, "name": project_name, "images": {}}
-
-        # Assuming the images are stored in the same format in self.fileList
-        for index in range(self.fileList.count()):
-            item_text = self.fileList.item(index).text()
-            image_name, image_path = item_text.split(": ")
-            # Extracting the image filename from the absolute path
-            relative_image_path = Path(image_path).name
-            data["images"][image_name] = relative_image_path
-
-        # Save the data to the .clot.scape file
-        with open(file_path, "w") as file:
-            json.dump(data, file, indent=4)
+    def update_display(self):
+        """Update the display based on whether a project is loaded."""
+        if self.project:
+            self.createProjectButton.hide()
+            self.closeProjectButton.show()
+            self.uploadButton.show()
+            self.fileList.show()
+            # TODO: Populate the fileList with the project's files
+        else:
+            self.createProjectButton.show()
+            self.closeProjectButton.hide()
+            self.uploadButton.hide()
+            self.fileList.hide()
 
     def open_project(self):
-        """Open a file explorer to select a .clot.scape project file."""
-        file_path, _ = QFileDialog.getOpenFileName(
-            self, "Open Project File", "", "ClotScape Files (*.clot.scape)"
+        """Open an existing project."""
+        fileName, _ = QFileDialog.getOpenFileName(
+            self,
+            "Open Clotscape Project",
+            "",
+            "Clotscape Files (*.clotscape);;All Files (*)",
         )
-        if file_path:
-            self.selected_file_path = Path(file_path)
-            self._load_images_from_config()
-            self.fileList.clear()
+        if fileName:
+            try:
+                self.project = Project.load(Path(fileName))
+                self.project_changed.emit(self.project)
+                self.update_display()
+            except Exception as e:
+                QMessageBox.critical(self, "Error", f"Failed to load the project: {e}")
 
-    def _load_images_from_config(self):
-        """Load and display images from the selected .clot.scape config file."""
-        with self.selected_file_path.open() as file:
-            config = json.load(file)
-            image_dict = config.get("images", {})
-            parent_dir = self.selected_file_path.parent
+    def create_project(self) -> None:
+        """Create a new project."""
+        name, ok = QInputDialog.getText(
+            self, "Create Project", "Project Name (alphabets and '-'):"
+        )
 
-            for image_name, relative_image_path in image_dict.items():
-                absolute_image_path = parent_dir.joinpath(relative_image_path)
-                # Display the image name in the file manager (QListWidget)
-                self.fileList.addItem(f"{image_name}: {absolute_image_path}")
+        if ok and name and self.validate_project_name(name):
+            folder = QFileDialog.getExistingDirectory(self, "Select Parent Directory")
+
+            if folder:
+                self.project = Project.create(name, Path(folder))
+                self.project_changed.emit(self.project)
+                self.update_display()
+        else:
+            QMessageBox.warning(
+                self,
+                "Invalid Name",
+                "Project name is invalid. Use only alphabets and '-'.",
+            )
+
+    def close_project(self) -> None:
+        """Close the current project."""
+        self.project = None
+        self.project_changed.emit(self.project)
+        self.fileList.clear()
+        self.update_display()
+
+    @staticmethod
+    def validate_project_name(name: str) -> bool:
+        """
+        Validate project name.
+        Allowed characters are alphabets and '-'.
+
+        Args:
+            name (str): Project name
+
+        Returns:
+            bool: True if valid, False otherwise
+        """
+        return bool(re.match(r"^[A-Za-z-]+$", name))
