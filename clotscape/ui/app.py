@@ -26,7 +26,7 @@ class App(QMainWindow):
 
         # Main Font
         font = QFont()
-        font.setFamily("Roboto")
+        font.setFamily("Arial")
         font.setPointSize(12)
         self.setFont(font)
 
@@ -37,6 +37,7 @@ class App(QMainWindow):
 
         # Set up the connections
         self.file_manager.project_changed.connect(self.set_project)
+        self.file_manager.image_selected.connect(self.display_image_in_viewer)
 
         self.main_layout = QHBoxLayout()
 
@@ -64,3 +65,6 @@ class App(QMainWindow):
         """Set the project and update the display."""
         self.project = project
         self.update_display()
+
+    def display_image_in_viewer(self, image_path: str):
+        self.scan_viewer.display_image(image_path)

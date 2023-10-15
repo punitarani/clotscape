@@ -23,6 +23,7 @@ class FileManager(QWidget):
     """App File Manager widget"""
 
     project_changed = Signal(Project)
+    image_selected = Signal(str)
 
     def __init__(self, project: Project = None):
         """
@@ -74,6 +75,7 @@ class FileManager(QWidget):
         self.uploadButton.clicked.connect(self.upload_image)
 
         self.file_list = QListWidget()
+        self.file_list.itemClicked.connect(self.image_selected_handler)
 
         self.layout.addWidget(self.uploadButton)
         self.layout.addWidget(self.file_list)
@@ -180,6 +182,11 @@ class FileManager(QWidget):
 
             # Update the file_list
             self.file_list.addItem(f"{image_name} ({filePath})")
+
+    def image_selected_handler(self, item):
+        # Assuming the path is stored as part of the list item's text
+        path = item.text().split("(", 1)[1].rsplit(")", 1)[0]
+        self.image_selected.emit(path)
 
     @staticmethod
     def validate_name(name: str) -> bool:

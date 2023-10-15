@@ -8,6 +8,8 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from .image import Image
+
 
 class ScanViewer(QWidget):
     """App CT Scan Viewer widget"""
@@ -16,13 +18,18 @@ class ScanViewer(QWidget):
         super().__init__()
         layout = QVBoxLayout()
 
-        label = QLabel("Main Image Viewer")
+        label = QLabel("Scan Viewer")
         label.setFont(QFont("Arial", 12, QFont.Bold))
         label.setAlignment(Qt.AlignCenter)
 
-        self.imageView = QLabel("(Selected image will be displayed here)")
-        self.imageView.setAlignment(Qt.AlignCenter)
+        # Add the Image widget
+        self.image = Image()
 
         layout.addWidget(label)
-        layout.addWidget(self.imageView)
+        layout.addWidget(self.image)
+
         self.setLayout(layout)
+
+    def display_image(self, image_path: str):
+        """Display an image in the viewer."""
+        self.image.set_image(image_path)
