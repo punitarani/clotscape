@@ -71,13 +71,12 @@ class FileManager(QWidget):
             QIcon.fromTheme("document-open"), "Upload Image"
         )
         self.uploadButton.setIconSize(QSize(24, 24))
-        # TODO: Connect this button to the appropriate function
-        # self.uploadButton.clicked.connect(self.upload_image)
+        self.uploadButton.clicked.connect(self.upload_image)
 
-        self.fileList = QListWidget()
+        self.file_list = QListWidget()
 
         self.layout.addWidget(self.uploadButton)
-        self.layout.addWidget(self.fileList)
+        self.layout.addWidget(self.file_list)
 
         self.setLayout(self.layout)
 
@@ -89,13 +88,17 @@ class FileManager(QWidget):
             self.createProjectButton.hide()
             self.closeProjectButton.show()
             self.uploadButton.show()
-            self.fileList.show()
-            # TODO: Populate the fileList with the project's files
+            self.file_list.show()
+
+            # Populate the file_list with the project's files
+            self.file_list.clear()
+            for name, path in self.project.images.items():
+                self.file_list.addItem(f"{name} ({path})")
         else:
             self.createProjectButton.show()
             self.closeProjectButton.hide()
             self.uploadButton.hide()
-            self.fileList.hide()
+            self.file_list.hide()
 
     def open_project(self):
         """Open an existing project."""
@@ -119,11 +122,11 @@ class FileManager(QWidget):
             self, "Create Project", "Project Name (alphabets and '-'):"
         )
 
-        if ok and name and self.validate_project_name(name):
+        if ok and name and self.validate_name(name):
             folder = QFileDialog.getExistingDirectory(self, "Select Parent Directory")
 
             if folder:
-                self.project = Project.create(name, Path(folder))
+                self.project = Project.create(name, Path(folder).joinpath(name))
                 self.project_changed.emit(self.project)
                 self.update_display()
         else:
@@ -137,14 +140,51 @@ class FileManager(QWidget):
         """Close the current project."""
         self.project = None
         self.project_changed.emit(self.project)
-        self.fileList.clear()
+        self.file_list.clear()
         self.update_display()
 
+    def upload_image(self):
+        """Upload a new image to the project."""
+        filePath, _ = QFileDialog.getOpenFileName(
+            self,
+            "Upload Image",
+            "",
+            "Image Files (*.png *.jpg *.jpeg);;All Files (*)",
+        )
+
+        if filePath:
+            # Validate image extension
+            ext = Path(filePath).suffix.lower()
+            if ext not in [".png", ".jpg", ".jpeg"]:
+                QMessageBox.warning(
+                    self,
+                    "Invalid Image",
+                    "Only .jpg, .jpeg, and .png images are allowed.",
+                )
+                return
+
+            # Ask user for image name
+            image_name, ok = QInputDialog.getText(
+                self,
+                "Image Name",
+                "Enter name for the image (leave empty to use file name):",
+            )
+
+            # If user didn't provide a name or if the name is not valid, use the file name
+            if not ok or not image_name or not self.validate_name(image_name):
+                image_name = Path(filePath).stem
+
+            # Assuming the Project class has a method to add new images
+            # You'll need to implement this
+            self.project.add_image(image_name, Path(filePath))
+
+            # Update the file_list
+            self.file_list.addItem(f"{image_name} ({filePath})")
+
     @staticmethod
-    def validate_project_name(name: str) -> bool:
+    def validate_name(name: str) -> bool:
         """
-        Validate project name.
-        Allowed characters are alphabets and '-'.
+        Validate name, Allowed characters are alphabets and '-'.
 
         Args:
             name (str): Project name

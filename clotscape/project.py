@@ -19,6 +19,11 @@ class Project:
 
         self.images: dict[str, Path] = images
 
+    @property
+    def config_file(self) -> Path:
+        """Path to config file"""
+        return self.folder.joinpath(f"{self.name}.clotscape")
+
     @classmethod
     def create(cls, name: str, folder: Path) -> "Project":
         """
@@ -31,6 +36,9 @@ class Project:
         Returns:
             Project: New Project
         """
+
+        # Create the project folder if it doesn't exist
+        folder.mkdir(parents=True, exist_ok=True)
 
         project_id = uuid4()
         images = {}
@@ -70,10 +78,30 @@ class Project:
             "id": str(self.id),
             "name": self.name,
             "images": {
-                name: path.relative_to(self.folder.joinpath("images"))
+                name: str(path.relative_to(self.folder.joinpath("images")))
                 for name, path in self.images.items()
             },
         }
 
-        with open(self.folder, "w") as f:
+        with open(self.config_file, "w") as f:
             json.dump(data, f, indent=4)
+
+    def add_image(self, name: str, image: Path) -> None:
+        """
+        Add image to project
+
+        Args:
+            name (str): Image name
+            image (Path): Image file
+        """
+
+        # Copy the image to the project's images folder
+        image_folder = self.folder.joinpath("images")
+        image_folder.mkdir(parents=True, exist_ok=True)
+
+        image_fp = image_folder.joinpath(image.name)
+        image_fp.write_bytes(image.read_bytes())
+
+        # Add the image to the project
+        self.images[name] = image_fp
+        self.save()
