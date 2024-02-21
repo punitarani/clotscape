@@ -10,6 +10,7 @@ packages = [{include = "clotscape"}]
 python = ">3.11 <3.12"
 jupyterlab = "^4.0.5"
 matplotlib = "^3.7.3"
+medsam = {git = "https://github.com/bowang-lab/MedSAM.git"}
 notebook = "^7.0.5"
 onnx = "^1.14.1"
 onnxruntime = "^1.15.1"
