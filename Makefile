@@ -8,7 +8,7 @@ else
 endif
 
 # List of directories and files to format and lint
-TARGETS = main.py
+TARGETS = main.py gui.py
 
 # Format code using isort and black
 format:
