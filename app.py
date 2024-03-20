@@ -17,7 +17,7 @@ torch.cuda.manual_seed(2023)
 np.random.seed(2023)
 
 
-# MedSAM model configs
+# SAM model configs
 SAM_MODEL_TYPE = "vit_h"
 SAM_MODEL_PATH = MODELS_DIR.joinpath("vit", "sam_vit_h_4b8939.pth")
 SAM_ONNX_PATH = MODELS_DIR.joinpath("vit", "sam_vit_h_int8.onnx")
@@ -56,13 +56,16 @@ def load_image(image_path: str) -> np.ndarray:
     return image
 
 
-def get_embedding(image: np.ndarray, name: str = None) -> np.ndarray:
+def get_embedding(
+    image: np.ndarray, predictor: SamPredictor, name: str = None
+) -> np.ndarray:
     """
     Get the embedding for an image.
     Saves the embedding to disk if a name is provided.
 
     Args:
         image (np.ndarray): An image as a NumPy array with shape (height, width, channels).
+        predictor (SamPredictor): A predictor for the image segmentation model.
         name (str): Name of the image to use for saving the embedding.
 
     Returns:
@@ -78,7 +81,6 @@ def get_embedding(image: np.ndarray, name: str = None) -> np.ndarray:
             return np.load(file=embedding_fp)
 
     # Generate the embedding
-    predictor = SamPredictor(sam_model=SAM)
     predictor.set_image(image)
     embedding = predictor.get_image_embedding().cpu().numpy()
 
@@ -92,5 +94,6 @@ def get_embedding(image: np.ndarray, name: str = None) -> np.ndarray:
 
 if __name__ == "__main__":
     IMAGE = load_image(image_path=IMAGE_PATH)
-    EMBEDDING = get_embedding(image=IMAGE, name=IMAGE_NAME)
+    PREDICTOR = SamPredictor(sam_model=SAM)
+    EMBEDDING = get_embedding(image=IMAGE, predictor=PREDICTOR, name=IMAGE_NAME)
     print(f"Embedding shape: {EMBEDDING.shape}")
