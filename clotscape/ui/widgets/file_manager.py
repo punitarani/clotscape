@@ -23,7 +23,7 @@ class FileManager(QWidget):
     """App File Manager widget"""
 
     project_changed = Signal(Project)
-    image_selected = Signal(str)
+    image_selected = Signal(Path)
 
     def __init__(self, project: Project = None):
         """
@@ -186,6 +186,7 @@ class FileManager(QWidget):
     def image_selected_handler(self, item):
         # Assuming the path is stored as part of the list item's text
         path = item.text().split("(", 1)[1].rsplit(")", 1)[0]
+        path = Path(path.strip())
         self.image_selected.emit(path)
 
     @staticmethod

@@ -3,7 +3,10 @@
 import sys
 import time
 
+import cv2
+import matplotlib.pyplot as plt
 import numpy as np
+import onnxruntime
 import torch
 from PIL import Image
 from PyQt6.QtGui import (
@@ -26,7 +29,8 @@ from PyQt6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
-from segment_anything import sam_model_registry
+from segment_anything import SamPredictor, sam_model_registry
+from segment_anything.utils.onnx import SamOnnxModel
 from skimage import io, transform
 from torch.nn import functional as F
 
@@ -42,6 +46,7 @@ np.random.seed(2023)  # Seed for generating random numbers in numpy
 # MedSAM model configs
 SAM_MODEL_TYPE = "vit_b"
 MedSAM_CKPT_PATH = MODELS_DIR.joinpath("medsam", "medsam_vit_b.pth")
+ONNX_MODEL_PATH = MODELS_DIR.joinpath("medsam", "medsam_vit_b_int8.onnx")
 MEDSAM_IMG_INPUT_SIZE = 1024
 
 if torch.backends.mps.is_available():
@@ -60,7 +65,12 @@ tic = time.perf_counter()
 MEDSAM_MODEL = sam_model_registry["vit_b"](checkpoint=MedSAM_CKPT_PATH).to(device)
 MEDSAM_MODEL.eval()
 
+MEDSAM_ONNX_MODEL = SamOnnxModel(MEDSAM_MODEL, return_single_mask=False)
+
 print(f"Loaded MedSAM in {time.perf_counter() - tic:0.2f}s")
+
+
+ort_session = onnxruntime.InferenceSession(ONNX_MODEL_PATH)
 
 
 COLORS = [

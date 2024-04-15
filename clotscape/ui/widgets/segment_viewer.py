@@ -1,12 +1,9 @@
 """clotscape/ui/widgets/scan_viewer.py"""
 
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QFont
-from PySide6.QtWidgets import (
-    QVBoxLayout,
-    QLabel,
-    QWidget,
-)
+from pathlib import Path
+
+from PySide6.QtGui import QPixmap
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel
 
 
 class SegmentViewer(QWidget):
@@ -14,17 +11,17 @@ class SegmentViewer(QWidget):
 
     def __init__(self):
         super().__init__()
-        layout = QVBoxLayout()
 
-        label = QLabel("Segments Viewer")
-        label.setFont(QFont("Arial", 12, QFont.Bold))
-        label.setAlignment(Qt.AlignCenter)
+        self.layout = QVBoxLayout()
 
-        self.segmentView = QLabel(
-            "(Segments of the selected image will be displayed here)"
-        )
-        self.segmentView.setAlignment(Qt.AlignCenter)
+        self.original_image_label = QLabel()
+        self.mask_image_label = QLabel()
 
-        layout.addWidget(label)
-        layout.addWidget(self.segmentView)
-        self.setLayout(layout)
+        self.layout.addWidget(self.original_image_label)
+        self.layout.addWidget(self.mask_image_label)
+
+        self.setLayout(self.layout)
+
+    def display_segmented_image(self, original_image_path: Path, mask_image: QPixmap):
+        self.original_image_label.setPixmap(QPixmap(original_image_path))
+        self.mask_image_label.setPixmap(mask_image)

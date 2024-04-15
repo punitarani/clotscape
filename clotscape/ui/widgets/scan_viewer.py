@@ -6,6 +6,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QLabel,
     QWidget,
+    QProgressBar,
 )
 
 from .image import Image
@@ -25,11 +26,23 @@ class ScanViewer(QWidget):
         # Add the Image widget
         self.image = Image()
 
+        # Loading bar
+        self.loading_bar = QProgressBar(self)
+        self.loading_bar.setMaximum(0)
+        self.loading_bar.setMinimum(0)
+        self.loading_bar.setTextVisible(False)
+        self.loading_bar.hide()
+
         layout.addWidget(label)
         layout.addWidget(self.image)
+        layout.addWidget(self.loading_bar)
 
         self.setLayout(layout)
 
-    def display_image(self, image_path: str):
-        """Display an image in the viewer."""
-        self.image.set_image(image_path)
+    def start_loading(self):
+        """Start the loading animation."""
+        self.loading_bar.show()
+
+    def stop_loading(self):
+        """Stop the loading animation."""
+        self.loading_bar.hide()
