@@ -56,15 +56,12 @@ def load_image(image_path: str) -> np.ndarray:
     return image
 
 
-def get_embedding(
-    image: np.ndarray, predictor: SamPredictor, name: str = None
-) -> np.ndarray:
+def get_embedding(predictor: SamPredictor, name: str = None) -> np.ndarray:
     """
     Get the embedding for an image.
     Saves the embedding to disk if a name is provided.
 
     Args:
-        image (np.ndarray): An image as a NumPy array with shape (height, width, channels).
         predictor (SamPredictor): A predictor for the image segmentation model.
         name (str): Name of the image to use for saving the embedding.
 
@@ -81,7 +78,6 @@ def get_embedding(
             return np.load(file=embedding_fp)
 
     # Generate the embedding
-    predictor.set_image(image)
     embedding = predictor.get_image_embedding().cpu().numpy()
 
     # Save the embedding to disk
