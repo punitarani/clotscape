@@ -1,4 +1,4 @@
-# CT Scan Pre-Processing to Enhance PAA Segmentation Accuracy
+# CT Scan Preprocessing to Enhance PAA Segmentation Accuracy
 
 ## Abstract
 
@@ -25,7 +25,7 @@ intervention and preventing complications. CT imaging is widely used for detecti
 complexity of the knee joint's anatomy and the presence of noise, intensity variations, and artifacts can pose
 challenges for precise segmentation and diagnosis.
 
-Pre-processing techniques, such as noise reduction, intensity normalization, contrast enhancement, and artifact removal,
+Preprocessing techniques, such as noise reduction, intensity normalization, contrast enhancement, and artifact removal,
 have shown promising results in improving the quality of medical images and enhancing the performance of segmentation
 algorithms. By addressing these issues, preprocessing can potentially facilitate more accurate delineation of PAAs and
 surrounding structures, aiding in diagnosis and treatment planning.
