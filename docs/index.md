@@ -64,6 +64,6 @@ aneurysm (PAA). The image exhibits typical characteristics of CT scans, includin
 artifacts that can affect segmentation accuracy. We will apply a series of preprocessing techniques to enhance the
 image quality and prepare it for segmentation.
 
-![317947.jpg](https://github.com/punitarani/clotscape/blob/master/docs/img/317947.jpg)
+![317947.jpg](./img/317947.jpg)
 
 Source: [CTisus](www.ctisus.com)
